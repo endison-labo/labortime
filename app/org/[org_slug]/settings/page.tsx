@@ -1,6 +1,6 @@
 import { redirect } from 'next/navigation'
-import { getCurrentMemberBySlug } from '@/lib/auth/utils'
-import { getOrganizationBySlug, updateOrganization } from '@/app/actions/organization'
+import { getCurrentMemberAndOrganizationBySlug } from '@/lib/auth/utils'
+import { updateOrganization } from '@/app/actions/organization'
 import Link from 'next/link'
 import OrganizationSettingsForm from '@/components/admin/OrganizationSettingsForm'
 import type { OrganizationUpdate } from '@/types/database'
@@ -11,7 +11,9 @@ interface PageProps {
 
 export default async function OrganizationSettingsPage({ params }: PageProps) {
   const { org_slug } = await params
-  const member = await getCurrentMemberBySlug(org_slug)
+  
+  // 最適化: memberとorganizationを1回のJOINクエリで取得
+  const { member, organization } = await getCurrentMemberAndOrganizationBySlug(org_slug)
 
   if (!member) {
     redirect(`/org/${org_slug}/login`)
@@ -21,8 +23,6 @@ export default async function OrganizationSettingsPage({ params }: PageProps) {
   if (member.role !== 'owner' && member.role !== 'admin') {
     redirect(`/org/${org_slug}/dashboard`)
   }
-
-  const organization = await getOrganizationBySlug(org_slug)
 
   if (!organization) {
     return (

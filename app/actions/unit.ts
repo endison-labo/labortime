@@ -11,21 +11,12 @@ import { revalidatePath } from 'next/cache'
 
 /**
  * organization に所属する unit 一覧を取得
- * 最適化: memberからorganization_idを直接取得（getOrganizationIdBySlugの呼び出しを削減）
+ * 最適化: organizationIdを直接受け取る（認証チェックは呼び出し側で行う）
  */
-export async function getUnitsByOrganization(
-  organizationSlug: string
+export async function getUnitsByOrganizationId(
+  organizationId: string
 ): Promise<{ units?: Unit[]; error?: string }> {
   try {
-    // アクセス権限チェック（memberにはorganization_idが含まれている）
-    const member = await getCurrentMemberBySlug(organizationSlug)
-    if (!member) {
-      return { error: 'アクセス権限がありません' }
-    }
-
-    // memberからorganization_idを直接取得（追加のクエリ不要）
-    const organizationId = member.organization_id
-
     const supabaseAdmin = getSupabaseAdmin()
     const { data: units, error } = await supabaseAdmin
       .from('units')
@@ -39,6 +30,27 @@ export async function getUnitsByOrganization(
     }
 
     return { units: (units || []) as Unit[] }
+  } catch (error) {
+    console.error('Error in getUnitsByOrganizationId:', error)
+    return { error: error instanceof Error ? error.message : '予期しないエラーが発生しました' }
+  }
+}
+
+/**
+ * organization に所属する unit 一覧を取得（後方互換性のため）
+ * @deprecated getUnitsByOrganizationIdを使用してください
+ */
+export async function getUnitsByOrganization(
+  organizationSlug: string
+): Promise<{ units?: Unit[]; error?: string }> {
+  try {
+    // アクセス権限チェック
+    const member = await getCurrentMemberBySlug(organizationSlug)
+    if (!member) {
+      return { error: 'アクセス権限がありません' }
+    }
+
+    return getUnitsByOrganizationId(member.organization_id)
   } catch (error) {
     console.error('Error in getUnitsByOrganization:', error)
     return { error: error instanceof Error ? error.message : '予期しないエラーが発生しました' }

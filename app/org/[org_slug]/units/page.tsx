@@ -1,6 +1,6 @@
 import { redirect } from 'next/navigation'
 import { getCurrentMemberBySlug } from '@/lib/auth/utils'
-import { getUnitsByOrganization } from '@/app/actions/unit'
+import { getUnitsByOrganizationId } from '@/app/actions/unit'
 import Link from 'next/link'
 
 interface PageProps {
@@ -9,13 +9,15 @@ interface PageProps {
 
 export default async function UnitsPage({ params }: PageProps) {
   const { org_slug } = await params
+  
+  // 最適化: memberを取得してから、memberのorganization_idでunitsを取得（並列化）
   const member = await getCurrentMemberBySlug(org_slug)
-
   if (!member) {
     redirect(`/org/${org_slug}/login`)
   }
 
-  const { units, error } = await getUnitsByOrganization(org_slug)
+  // memberからorganization_idを直接取得してunitsを取得（重複クエリを削減）
+  const { units, error } = await getUnitsByOrganizationId(member.organization_id)
 
   return (
     <div className="min-h-screen bg-slate-50">

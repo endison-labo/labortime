@@ -1,6 +1,5 @@
 import { redirect } from 'next/navigation'
-import { getCurrentMemberBySlug } from '@/lib/auth/utils'
-import { getOrganizationBySlug } from '@/app/actions/organization'
+import { getCurrentMemberAndOrganizationBySlug } from '@/lib/auth/utils'
 import Link from 'next/link'
 
 interface PageProps {
@@ -9,13 +8,13 @@ interface PageProps {
 
 export default async function DashboardPage({ params }: PageProps) {
   const { org_slug } = await params
-  const member = await getCurrentMemberBySlug(org_slug)
+  
+  // 最適化: memberとorganizationを1回のJOINクエリで取得
+  const { member, organization } = await getCurrentMemberAndOrganizationBySlug(org_slug)
 
   if (!member) {
     redirect(`/org/${org_slug}/login`)
   }
-
-  const organization = await getOrganizationBySlug(org_slug)
 
   return (
     <div className="min-h-screen bg-slate-50">

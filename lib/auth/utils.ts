@@ -153,11 +153,31 @@ export async function getCurrentMembers(): Promise<Member[]> {
 
 /**
  * 指定された organization に所属するメンバー情報を取得
+ * 最適化: 直接クエリしてパフォーマンスを向上
  */
 export async function getCurrentMember(organizationId: string): Promise<Member | null> {
   try {
-    const members = await getCurrentMembers()
-    return members.find(m => m.organization_id === organizationId) || null
+    const supabase = await createServerSupabaseClient()
+    const { data: { user }, error: authError } = await supabase.auth.getUser()
+
+    if (authError || !user) {
+      return null
+    }
+
+    // 直接クエリでメンバー情報を取得（getCurrentMembers()を呼ばない）
+    const supabaseAdmin = getSupabaseAdmin()
+    const { data: member, error } = await supabaseAdmin
+      .from('members')
+      .select('*')
+      .eq('user_id', user.id)
+      .eq('organization_id', organizationId)
+      .single()
+
+    if (error || !member) {
+      return null
+    }
+
+    return member as Member
   } catch (error) {
     if (process.env.NODE_ENV === 'development') {
       console.error('Error getting current member:', error)
@@ -168,7 +188,7 @@ export async function getCurrentMember(organizationId: string): Promise<Member |
 
 /**
  * organization_slug から現在のユーザーのメンバー情報を取得
- * 最適化: organization_idを取得してからmemberを取得（キャッシュ活用）
+ * 注意: cookiesを使用するため、unstable_cacheは使用しない
  */
 export async function getCurrentMemberBySlug(organizationSlug: string): Promise<Member | null> {
   try {
@@ -179,7 +199,7 @@ export async function getCurrentMemberBySlug(organizationSlug: string): Promise<
       return null
     }
 
-    // organization_idを取得（キャッシュ済み）
+    // organization_idを取得（これはキャッシュ可能）
     const organizationId = await getOrganizationIdBySlug(organizationSlug)
     if (!organizationId) {
       return null
@@ -204,6 +224,48 @@ export async function getCurrentMemberBySlug(organizationSlug: string): Promise<
       console.error('Error getting current member by slug:', error)
     }
     return null
+  }
+}
+
+/**
+ * organization_slug から現在のユーザーのメンバー情報と組織情報を1回のJOINクエリで取得
+ * 最適化: 2回のクエリを1回に統合
+ */
+export async function getCurrentMemberAndOrganizationBySlug(
+  organizationSlug: string
+): Promise<{ member: Member | null; organization: Organization | null }> {
+  try {
+    const supabase = await createServerSupabaseClient()
+    const { data: { user }, error: authError } = await supabase.auth.getUser()
+
+    if (authError || !user) {
+      return { member: null, organization: null }
+    }
+
+    // JOINクエリでmemberとorganizationを1回で取得
+    const supabaseAdmin = getSupabaseAdmin()
+    const { data, error } = await supabaseAdmin
+      .from('members')
+      .select('*, organizations!inner(*)')
+      .eq('user_id', user.id)
+      .eq('organizations.organization_slug', organizationSlug)
+      .single()
+
+    if (error || !data) {
+      return { member: null, organization: null }
+    }
+
+    // dataからmemberとorganizationを分離
+    const { organizations, ...memberData } = data as any
+    return {
+      member: memberData as Member,
+      organization: organizations as Organization,
+    }
+  } catch (error) {
+    if (process.env.NODE_ENV === 'development') {
+      console.error('Error getting current member and organization by slug:', error)
+    }
+    return { member: null, organization: null }
   }
 }
 

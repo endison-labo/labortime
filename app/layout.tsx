@@ -25,11 +25,3 @@ export default function RootLayout({
   );
 }
 
-
-
-
-
-
-
-
-
