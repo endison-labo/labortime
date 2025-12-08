@@ -8,33 +8,56 @@ import { revalidatePath } from 'next/cache'
 
 /**
  * organization_slug から organization 情報を取得
+ * 最適化: organization_slugで直接取得（キャッシュ活用のため、organizationId経由ではなく直接取得）
  */
-export async function getOrganizationBySlug(
+import { unstable_cache } from 'next/cache'
+
+async function _getOrganizationBySlugUncached(
   organizationSlug: string
 ): Promise<Organization | null> {
   try {
-    const organizationId = await getOrganizationIdBySlug(organizationSlug)
-    if (!organizationId) {
-      return null
-    }
-
     const supabaseAdmin = getSupabaseAdmin()
     const { data, error } = await supabaseAdmin
       .from('organizations')
       .select('*')
-      .eq('id', organizationId)
+      .eq('organization_slug', organizationSlug)
       .single()
 
-    if (error || !data) {
-      console.error('Error fetching organization:', error)
+    if (error) {
+      console.error('Error fetching organization:', {
+        error: error.message,
+        code: error.code,
+        details: error.details,
+        hint: error.hint,
+        organizationSlug,
+      })
+      return null
+    }
+
+    if (!data) {
+      console.error('Organization not found:', { organizationSlug })
       return null
     }
 
     return data as Organization
   } catch (error) {
-    console.error('Error in getOrganizationBySlug:', error)
+    console.error('Error in getOrganizationBySlug:', {
+      error: error instanceof Error ? error.message : String(error),
+      organizationSlug,
+    })
     return null
   }
+}
+
+export async function getOrganizationBySlug(
+  organizationSlug: string
+): Promise<Organization | null> {
+  // 5分間キャッシュ（organization情報は変更頻度が低い）
+  return unstable_cache(
+    async () => _getOrganizationBySlugUncached(organizationSlug),
+    ['organization', organizationSlug],
+    { revalidate: 300 }
+  )()
 }
 
 /**
@@ -111,10 +134,8 @@ export async function updateOrganization(
       return { error: '更新権限がありません' }
     }
 
-    const organizationId = await getOrganizationIdBySlug(organizationSlug)
-    if (!organizationId) {
-      return { error: '組織が見つかりません' }
-    }
+    // memberからorganization_idを直接取得（追加のクエリ不要）
+    const organizationId = member.organization_id
 
     const supabaseAdmin = getSupabaseAdmin()
     const { error } = await supabaseAdmin

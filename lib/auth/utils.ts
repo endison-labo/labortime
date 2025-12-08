@@ -4,8 +4,11 @@ import type { Member, Organization, Unit } from '@/types/database'
 
 /**
  * organization_slug から organization_id への変換
+ * Next.jsのキャッシュを活用してパフォーマンスを向上
  */
-export async function getOrganizationIdBySlug(organizationSlug: string): Promise<string | null> {
+import { unstable_cache } from 'next/cache'
+
+async function _getOrganizationIdBySlugUncached(organizationSlug: string): Promise<string | null> {
   try {
     const supabaseAdmin = getSupabaseAdmin()
     const { data, error } = await supabaseAdmin
@@ -25,6 +28,15 @@ export async function getOrganizationIdBySlug(organizationSlug: string): Promise
     }
     return null
   }
+}
+
+export async function getOrganizationIdBySlug(organizationSlug: string): Promise<string | null> {
+  // 5分間キャッシュ（organization_slugは変更されないため）
+  return unstable_cache(
+    async () => _getOrganizationIdBySlugUncached(organizationSlug),
+    ['organization-id', organizationSlug],
+    { revalidate: 300 }
+  )()
 }
 
 /**
@@ -156,15 +168,37 @@ export async function getCurrentMember(organizationId: string): Promise<Member |
 
 /**
  * organization_slug から現在のユーザーのメンバー情報を取得
+ * 最適化: organization_idを取得してからmemberを取得（キャッシュ活用）
  */
 export async function getCurrentMemberBySlug(organizationSlug: string): Promise<Member | null> {
   try {
+    const supabase = await createServerSupabaseClient()
+    const { data: { user }, error: authError } = await supabase.auth.getUser()
+
+    if (authError || !user) {
+      return null
+    }
+
+    // organization_idを取得（キャッシュ済み）
     const organizationId = await getOrganizationIdBySlug(organizationSlug)
     if (!organizationId) {
       return null
     }
 
-    return await getCurrentMember(organizationId)
+    // user_idとorganization_idでmemberを取得
+    const supabaseAdmin = getSupabaseAdmin()
+    const { data: member, error } = await supabaseAdmin
+      .from('members')
+      .select('*')
+      .eq('user_id', user.id)
+      .eq('organization_id', organizationId)
+      .single()
+
+    if (error || !member) {
+      return null
+    }
+
+    return member as Member
   } catch (error) {
     if (process.env.NODE_ENV === 'development') {
       console.error('Error getting current member by slug:', error)

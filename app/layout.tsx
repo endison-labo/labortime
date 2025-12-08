@@ -1,5 +1,12 @@
 import type { Metadata } from "next";
+import { Zen_Kaku_Gothic_New } from "next/font/google";
 import "./globals.css";
+
+const zenKaku = Zen_Kaku_Gothic_New({
+  weight: ["300", "400", "500", "700"],
+  subsets: ["latin"],
+  display: "swap",
+});
 
 export const metadata: Metadata = {
   title: "勤怠管理システム",
@@ -13,7 +20,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="ja">
-      <body>{children}</body>
+      <body className={zenKaku.className}>{children}</body>
     </html>
   );
 }

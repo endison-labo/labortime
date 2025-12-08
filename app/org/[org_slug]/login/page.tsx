@@ -1,9 +1,13 @@
 'use client'
 
 import { useState } from 'react'
+import { useParams } from 'next/navigation'
 import { signIn } from '@/app/actions/auth'
 
 export default function LoginPage() {
+  const params = useParams()
+  const organizationSlug = params.org_slug as string
+
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState<string | null>(null)
@@ -15,7 +19,7 @@ export default function LoginPage() {
     setIsLoading(true)
 
     try {
-      const result = await signIn(email, password)
+      const result = await signIn(organizationSlug, email, password)
       if (result?.error) {
         setError(result.error)
         setIsLoading(false)
@@ -97,5 +101,4 @@ export default function LoginPage() {
     </div>
   )
 }
-
 

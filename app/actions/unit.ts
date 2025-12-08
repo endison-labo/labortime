@@ -11,21 +11,20 @@ import { revalidatePath } from 'next/cache'
 
 /**
  * organization に所属する unit 一覧を取得
+ * 最適化: memberからorganization_idを直接取得（getOrganizationIdBySlugの呼び出しを削減）
  */
 export async function getUnitsByOrganization(
   organizationSlug: string
 ): Promise<{ units?: Unit[]; error?: string }> {
   try {
-    // アクセス権限チェック
+    // アクセス権限チェック（memberにはorganization_idが含まれている）
     const member = await getCurrentMemberBySlug(organizationSlug)
     if (!member) {
       return { error: 'アクセス権限がありません' }
     }
 
-    const organizationId = await getOrganizationIdBySlug(organizationSlug)
-    if (!organizationId) {
-      return { error: '組織が見つかりません' }
-    }
+    // memberからorganization_idを直接取得（追加のクエリ不要）
+    const organizationId = member.organization_id
 
     const supabaseAdmin = getSupabaseAdmin()
     const { data: units, error } = await supabaseAdmin
@@ -48,22 +47,21 @@ export async function getUnitsByOrganization(
 
 /**
  * unit_slug から unit 情報を取得
+ * 最適化: memberからorganization_idを直接取得
  */
 export async function getUnitBySlug(
   organizationSlug: string,
   unitSlug: string
 ): Promise<{ unit?: Unit; error?: string }> {
   try {
-    // アクセス権限チェック
+    // アクセス権限チェック（memberにはorganization_idが含まれている）
     const member = await getCurrentMemberBySlug(organizationSlug)
     if (!member) {
       return { error: 'アクセス権限がありません' }
     }
 
-    const organizationId = await getOrganizationIdBySlug(organizationSlug)
-    if (!organizationId) {
-      return { error: '組織が見つかりません' }
-    }
+    // memberからorganization_idを直接取得（追加のクエリ不要）
+    const organizationId = member.organization_id
 
     const unitId = await getUnitIdBySlug(organizationId, unitSlug)
     if (!unitId) {
@@ -108,10 +106,8 @@ export async function createUnit(
       return { error: '作成権限がありません' }
     }
 
-    const organizationId = await getOrganizationIdBySlug(organizationSlug)
-    if (!organizationId) {
-      return { error: '組織が見つかりません' }
-    }
+    // memberからorganization_idを直接取得（追加のクエリ不要）
+    const organizationId = member.organization_id
 
     // unit_slug の重複チェック
     const existingUnitId = await getUnitIdBySlug(organizationId, data.unit_slug)
@@ -173,7 +169,7 @@ export async function updateUnit(
   updates: UnitUpdate
 ): Promise<{ error?: string }> {
   try {
-    // アクセス権限チェック
+    // アクセス権限チェック（memberにはorganization_idが含まれている）
     const member = await getCurrentMemberBySlug(organizationSlug)
     if (!member) {
       return { error: 'アクセス権限がありません' }
@@ -184,10 +180,8 @@ export async function updateUnit(
       return { error: '更新権限がありません' }
     }
 
-    const organizationId = await getOrganizationIdBySlug(organizationSlug)
-    if (!organizationId) {
-      return { error: '組織が見つかりません' }
-    }
+    // memberからorganization_idを直接取得（追加のクエリ不要）
+    const organizationId = member.organization_id
 
     const unitId = await getUnitIdBySlug(organizationId, unitSlug)
     if (!unitId) {
@@ -232,10 +226,8 @@ export async function deleteUnit(
       return { error: '削除権限がありません' }
     }
 
-    const organizationId = await getOrganizationIdBySlug(organizationSlug)
-    if (!organizationId) {
-      return { error: '組織が見つかりません' }
-    }
+    // memberからorganization_idを直接取得（追加のクエリ不要）
+    const organizationId = member.organization_id
 
     const unitId = await getUnitIdBySlug(organizationId, unitSlug)
     if (!unitId) {

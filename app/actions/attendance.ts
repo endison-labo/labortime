@@ -3,7 +3,7 @@
 import { getSupabaseAdmin } from '@/lib/supabase/server'
 import { verifyPin } from '@/lib/utils/pin'
 import { getRoundedNow, formatWorkDate, formatTime } from '@/lib/utils/time'
-import type { Staff, Attendance, AttendanceLogInsert } from '@/types/database'
+import type { Employee, Unit, Attendance, AttendanceLogInsert } from '@/types/database'
 import { revalidatePath, unstable_noStore as noStore } from 'next/cache'
 
 interface ClockResult {
@@ -15,6 +15,7 @@ interface ClockResult {
   effectiveTime?: string
 }
 
+// フロントエンドとの後方互換性のため、StaffStatusインターフェースを維持
 interface StaffStatus {
   staffId: string
   staffName: string
@@ -25,67 +26,67 @@ interface StaffStatus {
 }
 
 /**
- * PINでスタッフを検証
+ * PINで従業員を検証
  */
-async function verifyStaffByPin(pin: string): Promise<Staff | null> {
+async function verifyEmployeeByPin(pin: string): Promise<Employee | null> {
   const supabaseAdmin = getSupabaseAdmin()
 
-  // アクティブなスタッフを全件取得（PINハッシュは取得しない）
-  const { data: staffs, error } = await supabaseAdmin
-    .from('staffs')
-    .select('id, clinic_id, name, hourly_wage, pin_hash, is_active')
+  // アクティブな従業員を全件取得
+  const { data: employees, error } = await supabaseAdmin
+    .from('employees')
+    .select('id, unit_id, name, hourly_wage, pin_hash, is_active')
     .eq('is_active', true)
 
-  if (error || !staffs) {
-    console.error('Error fetching staffs:', error)
+  if (error || !employees) {
+    console.error('Error fetching employees:', error)
     return null
   }
 
   // PINを検証
-  console.log('verifyStaffByPin: Checking', staffs.length, 'staff members')
-  for (const staff of staffs) {
-    console.log('verifyStaffByPin: Checking staff:', staff.name, 'PIN hash length:', staff.pin_hash?.length)
+  console.log('verifyEmployeeByPin: Checking', employees.length, 'employees')
+  for (const employee of employees) {
+    console.log('verifyEmployeeByPin: Checking employee:', employee.name, 'PIN hash length:', employee.pin_hash?.length)
     try {
-      const isValid = await verifyPin(pin, staff.pin_hash)
-      console.log('verifyStaffByPin: PIN verification result for', staff.name, ':', isValid)
+      const isValid = await verifyPin(pin, employee.pin_hash)
+      console.log('verifyEmployeeByPin: PIN verification result for', employee.name, ':', isValid)
       if (isValid) {
-        console.log('verifyStaffByPin: PIN verified successfully for', staff.name)
-        return staff as Staff
+        console.log('verifyEmployeeByPin: PIN verified successfully for', employee.name)
+        return employee as Employee
       }
     } catch (error) {
-      console.error('verifyStaffByPin: Error verifying PIN for', staff.name, ':', error)
+      console.error('verifyEmployeeByPin: Error verifying PIN for', employee.name, ':', error)
     }
   }
 
-  console.log('verifyStaffByPin: No matching staff found for PIN')
+  console.log('verifyEmployeeByPin: No matching employee found for PIN')
   return null
 }
 
 /**
- * クリニック設定を取得
+ * unit設定を取得
  */
-async function getClinic(clinicId: string) {
+async function getUnit(unitId: string): Promise<Unit | null> {
   const supabaseAdmin = getSupabaseAdmin()
   const { data, error } = await supabaseAdmin
-    .from('clinics')
+    .from('units')
     .select('*')
-    .eq('id', clinicId)
+    .eq('id', unitId)
     .single()
 
   if (error || !data) {
-    console.error('Error fetching clinic:', error)
+    console.error('Error fetching unit:', error)
     return null
   }
 
-  return data
+  return data as Unit
 }
 
 /**
  * 当日の勤怠レコードを取得（開いているもの）
  */
 async function getTodayAttendance(
-  clinicId: string,
-  staffId: string,
+  unitId: string,
+  employeeId: string,
   workDate: string
 ): Promise<Attendance | null> {
   const supabaseAdmin = getSupabaseAdmin()
@@ -93,8 +94,8 @@ async function getTodayAttendance(
   const { data, error } = await supabaseAdmin
     .from('attendances')
     .select('*')
-    .eq('clinic_id', clinicId)
-    .eq('staff_id', staffId)
+    .eq('unit_id', unitId)
+    .eq('employee_id', employeeId)
     .eq('work_date', workDate)
     .eq('status', 'open')
     .maybeSingle()
@@ -112,8 +113,8 @@ async function getTodayAttendance(
  * 複数レコードがある場合は、最新のもの（status='open'を優先、なければ最新）を返す
  */
 async function getTodayAttendanceAnyStatus(
-  clinicId: string,
-  staffId: string,
+  unitId: string,
+  employeeId: string,
   workDate: string
 ): Promise<Attendance | null> {
   const supabaseAdmin = getSupabaseAdmin()
@@ -122,8 +123,8 @@ async function getTodayAttendanceAnyStatus(
   const { data: openData, error: openError } = await supabaseAdmin
     .from('attendances')
     .select('*')
-    .eq('clinic_id', clinicId)
-    .eq('staff_id', staffId)
+    .eq('unit_id', unitId)
+    .eq('employee_id', employeeId)
     .eq('work_date', workDate)
     .eq('status', 'open')
     .order('created_at', { ascending: false })
@@ -142,8 +143,8 @@ async function getTodayAttendanceAnyStatus(
   const { data, error } = await supabaseAdmin
     .from('attendances')
     .select('*')
-    .eq('clinic_id', clinicId)
-    .eq('staff_id', staffId)
+    .eq('unit_id', unitId)
+    .eq('employee_id', employeeId)
     .eq('work_date', workDate)
     .order('created_at', { ascending: false })
     .limit(1)
@@ -158,7 +159,8 @@ async function getTodayAttendanceAnyStatus(
 }
 
 /**
- * PIN入力後のスタッフ状態を取得
+ * PIN入力後の従業員状態を取得
+ * フロントエンドとの後方互換性のため、StaffStatusインターフェースを返す
  */
 export async function getStaffStatusByPin(pin: string): Promise<{ success: boolean; status?: StaffStatus; message?: string }> {
   noStore()
@@ -172,8 +174,8 @@ export async function getStaffStatusByPin(pin: string): Promise<{ success: boole
       }
     }
 
-    const staff = await verifyStaffByPin(pin)
-    if (!staff) {
+    const employee = await verifyEmployeeByPin(pin)
+    if (!employee) {
       console.log('getStaffStatusByPin: PIN verification failed')
       return {
         success: false,
@@ -181,30 +183,30 @@ export async function getStaffStatusByPin(pin: string): Promise<{ success: boole
       }
     }
 
-    console.log('getStaffStatusByPin: Staff found:', staff.name, 'ID:', staff.id)
+    console.log('getStaffStatusByPin: Employee found:', employee.name, 'ID:', employee.id)
 
-    const clinic = await getClinic(staff.clinic_id)
-    if (!clinic) {
-      console.error('getStaffStatusByPin: Clinic not found for clinic_id:', staff.clinic_id)
+    const unit = await getUnit(employee.unit_id)
+    if (!unit) {
+      console.error('getStaffStatusByPin: Unit not found for unit_id:', employee.unit_id)
       return {
         success: false,
-        message: 'クリニック設定の取得に失敗しました',
+        message: '拠点設定の取得に失敗しました',
       }
     }
 
-    console.log('getStaffStatusByPin: Clinic found:', clinic.name, 'timezone:', clinic.timezone)
+    console.log('getStaffStatusByPin: Unit found:', unit.name, 'timezone:', unit.timezone)
 
-    if (!clinic.timezone) {
-      console.error('getStaffStatusByPin: Clinic timezone is missing')
+    if (!unit.timezone) {
+      console.error('getStaffStatusByPin: Unit timezone is missing')
       return {
         success: false,
-        message: 'クリニックのタイムゾーン設定がありません',
+        message: '拠点のタイムゾーン設定がありません',
       }
     }
 
     let today: string
     try {
-      today = formatWorkDate(new Date(), clinic.timezone)
+      today = formatWorkDate(new Date(), unit.timezone)
       console.log('getStaffStatusByPin: Today:', today)
     } catch (error) {
       console.error('getStaffStatusByPin: Error formatting work date:', error)
@@ -216,7 +218,7 @@ export async function getStaffStatusByPin(pin: string): Promise<{ success: boole
     
     let attendance: Attendance | null = null
     try {
-      attendance = await getTodayAttendanceAnyStatus(staff.clinic_id, staff.id, today)
+      attendance = await getTodayAttendanceAnyStatus(employee.unit_id, employee.id, today)
       console.log('getStaffStatusByPin: Attendance:', attendance ? `found (status: ${attendance.status}, break_out: ${attendance.break_out_actual}, break_in: ${attendance.break_in_actual})` : 'not found')
       if (attendance) {
         console.log('getStaffStatusByPin: Full attendance data:', JSON.stringify(attendance, null, 2))
@@ -241,10 +243,11 @@ export async function getStaffStatusByPin(pin: string): Promise<{ success: boole
       isOnBreak,
     })
 
+    // 後方互換性のため、StaffStatusインターフェースを使用（clinicIdはunitIdを返す）
     const status: StaffStatus = {
-      staffId: staff.id,
-      staffName: staff.name,
-      clinicId: staff.clinic_id,
+      staffId: employee.id,
+      staffName: employee.name,
+      clinicId: employee.unit_id, // 後方互換性のため、unit_idをclinicIdとして返す
       hasAttendance,
       isOnBreak,
       attendanceId: attendance?.id,
@@ -274,27 +277,27 @@ export async function getStaffStatusByPin(pin: string): Promise<{ success: boole
  */
 export async function clockInByPin(pin: string): Promise<ClockResult> {
   try {
-    // PINでスタッフを検証
-    const staff = await verifyStaffByPin(pin)
-    if (!staff) {
+    // PINで従業員を検証
+    const employee = await verifyEmployeeByPin(pin)
+    if (!employee) {
       return {
         success: false,
         message: 'PINが正しくありません',
       }
     }
 
-    // クリニック設定を取得
-    const clinic = await getClinic(staff.clinic_id)
-    if (!clinic) {
+    // unit設定を取得
+    const unit = await getUnit(employee.unit_id)
+    if (!unit) {
       return {
         success: false,
-        message: 'クリニック設定の取得に失敗しました',
+        message: '拠点設定の取得に失敗しました',
       }
     }
 
     // 当日の勤怠レコードを確認
-    const today = formatWorkDate(new Date(), clinic.timezone)
-    const existingAttendance = await getTodayAttendance(staff.clinic_id, staff.id, today)
+    const today = formatWorkDate(new Date(), unit.timezone)
+    const existingAttendance = await getTodayAttendance(employee.unit_id, employee.id, today)
 
     if (existingAttendance) {
       return {
@@ -305,9 +308,9 @@ export async function clockInByPin(pin: string): Promise<ClockResult> {
 
     // 現在時刻を取得して丸める
     const { actualUtc, effectiveUtc, actualLocal, effectiveLocal } = getRoundedNow(
-      clinic.timezone,
-      clinic.rounding_unit,
-      clinic.rounding_mode
+      unit.timezone,
+      unit.rounding_unit,
+      unit.rounding_mode
     )
 
     // 勤怠レコードを作成
@@ -315,8 +318,8 @@ export async function clockInByPin(pin: string): Promise<ClockResult> {
     const { data: attendance, error: attendanceError } = await supabaseAdmin
       .from('attendances')
       .insert({
-        clinic_id: staff.clinic_id,
-        staff_id: staff.id,
+        unit_id: employee.unit_id,
+        employee_id: employee.id,
         work_date: today,
         clock_in_actual: actualUtc.toISOString(),
         clock_in_effective: effectiveUtc.toISOString(),
@@ -339,8 +342,8 @@ export async function clockInByPin(pin: string): Promise<ClockResult> {
     // ログを記録
     const logInsert: AttendanceLogInsert = {
       attendance_id: attendance.id,
-      clinic_id: staff.clinic_id,
-      staff_id: staff.id,
+      unit_id: employee.unit_id,
+      employee_id: employee.id,
       log_type: 'clock_in',
       after_clock_in_effective: effectiveUtc.toISOString(),
       triggered_by_admin_user_id: null, // タブレット打刻時はnull
@@ -359,7 +362,7 @@ export async function clockInByPin(pin: string): Promise<ClockResult> {
     return {
       success: true,
       message: '出勤打刻が完了しました',
-      staffName: staff.name,
+      staffName: employee.name,
       clockType: 'in',
       actualTime: actualLocal,
       effectiveTime: effectiveLocal,
@@ -378,27 +381,27 @@ export async function clockInByPin(pin: string): Promise<ClockResult> {
  */
 export async function clockOutByPin(pin: string): Promise<ClockResult> {
   try {
-    // PINでスタッフを検証
-    const staff = await verifyStaffByPin(pin)
-    if (!staff) {
+    // PINで従業員を検証
+    const employee = await verifyEmployeeByPin(pin)
+    if (!employee) {
       return {
         success: false,
         message: 'PINが正しくありません',
       }
     }
 
-    // クリニック設定を取得
-    const clinic = await getClinic(staff.clinic_id)
-    if (!clinic) {
+    // unit設定を取得
+    const unit = await getUnit(employee.unit_id)
+    if (!unit) {
       return {
         success: false,
-        message: 'クリニック設定の取得に失敗しました',
+        message: '拠点設定の取得に失敗しました',
       }
     }
 
     // 当日の開いている勤怠レコードを取得
-    const today = formatWorkDate(new Date(), clinic.timezone)
-    const existingAttendance = await getTodayAttendance(staff.clinic_id, staff.id, today)
+    const today = formatWorkDate(new Date(), unit.timezone)
+    const existingAttendance = await getTodayAttendance(employee.unit_id, employee.id, today)
 
     if (!existingAttendance) {
       return {
@@ -409,9 +412,9 @@ export async function clockOutByPin(pin: string): Promise<ClockResult> {
 
     // 現在時刻を取得して丸める
     const { actualUtc, effectiveUtc, actualLocal, effectiveLocal } = getRoundedNow(
-      clinic.timezone,
-      clinic.rounding_unit,
-      clinic.rounding_mode
+      unit.timezone,
+      unit.rounding_unit,
+      unit.rounding_mode
     )
 
     // 勤務時間を計算（分）
@@ -442,8 +445,8 @@ export async function clockOutByPin(pin: string): Promise<ClockResult> {
     // ログを記録
     const logInsert: AttendanceLogInsert = {
       attendance_id: existingAttendance.id,
-      clinic_id: staff.clinic_id,
-      staff_id: staff.id,
+      unit_id: employee.unit_id,
+      employee_id: employee.id,
       log_type: 'clock_out',
       before_clock_out_effective: existingAttendance.clock_out_effective || null,
       after_clock_out_effective: effectiveUtc.toISOString(),
@@ -463,7 +466,7 @@ export async function clockOutByPin(pin: string): Promise<ClockResult> {
     return {
       success: true,
       message: '退勤打刻が完了しました',
-      staffName: staff.name,
+      staffName: employee.name,
       clockType: 'out',
       actualTime: actualLocal,
       effectiveTime: effectiveLocal,
@@ -482,27 +485,27 @@ export async function clockOutByPin(pin: string): Promise<ClockResult> {
  */
 export async function breakOutByPin(pin: string): Promise<ClockResult> {
   try {
-    // PINでスタッフを検証
-    const staff = await verifyStaffByPin(pin)
-    if (!staff) {
+    // PINで従業員を検証
+    const employee = await verifyEmployeeByPin(pin)
+    if (!employee) {
       return {
         success: false,
         message: 'PINが正しくありません',
       }
     }
 
-    // クリニック設定を取得
-    const clinic = await getClinic(staff.clinic_id)
-    if (!clinic) {
+    // unit設定を取得
+    const unit = await getUnit(employee.unit_id)
+    if (!unit) {
       return {
         success: false,
-        message: 'クリニック設定の取得に失敗しました',
+        message: '拠点設定の取得に失敗しました',
       }
     }
 
     // 当日の開いている勤怠レコードを取得
-    const today = formatWorkDate(new Date(), clinic.timezone)
-    const existingAttendance = await getTodayAttendance(staff.clinic_id, staff.id, today)
+    const today = formatWorkDate(new Date(), unit.timezone)
+    const existingAttendance = await getTodayAttendance(employee.unit_id, employee.id, today)
 
     if (!existingAttendance) {
       return {
@@ -521,9 +524,9 @@ export async function breakOutByPin(pin: string): Promise<ClockResult> {
 
     // 現在時刻を取得して丸める
     const { actualUtc, effectiveUtc, actualLocal, effectiveLocal } = getRoundedNow(
-      clinic.timezone,
-      clinic.rounding_unit,
-      clinic.rounding_mode
+      unit.timezone,
+      unit.rounding_unit,
+      unit.rounding_mode
     )
 
     // 勤怠レコードを更新
@@ -551,8 +554,8 @@ export async function breakOutByPin(pin: string): Promise<ClockResult> {
     // ログを記録
     const logInsert: AttendanceLogInsert = {
       attendance_id: existingAttendance.id,
-      clinic_id: staff.clinic_id,
-      staff_id: staff.id,
+      unit_id: employee.unit_id,
+      employee_id: employee.id,
       log_type: 'break_out',
       triggered_by_admin_user_id: null, // タブレット打刻時はnull
     }
@@ -570,7 +573,7 @@ export async function breakOutByPin(pin: string): Promise<ClockResult> {
     return {
       success: true,
       message: '外出打刻が完了しました',
-      staffName: staff.name,
+      staffName: employee.name,
       clockType: 'break_out',
       actualTime: actualLocal,
       effectiveTime: effectiveLocal,
@@ -589,27 +592,27 @@ export async function breakOutByPin(pin: string): Promise<ClockResult> {
  */
 export async function breakInByPin(pin: string): Promise<ClockResult> {
   try {
-    // PINでスタッフを検証
-    const staff = await verifyStaffByPin(pin)
-    if (!staff) {
+    // PINで従業員を検証
+    const employee = await verifyEmployeeByPin(pin)
+    if (!employee) {
       return {
         success: false,
         message: 'PINが正しくありません',
       }
     }
 
-    // クリニック設定を取得
-    const clinic = await getClinic(staff.clinic_id)
-    if (!clinic) {
+    // unit設定を取得
+    const unit = await getUnit(employee.unit_id)
+    if (!unit) {
       return {
         success: false,
-        message: 'クリニック設定の取得に失敗しました',
+        message: '拠点設定の取得に失敗しました',
       }
     }
 
     // 当日の開いている勤怠レコードを取得
-    const today = formatWorkDate(new Date(), clinic.timezone)
-    const existingAttendance = await getTodayAttendance(staff.clinic_id, staff.id, today)
+    const today = formatWorkDate(new Date(), unit.timezone)
+    const existingAttendance = await getTodayAttendance(employee.unit_id, employee.id, today)
 
     if (!existingAttendance) {
       return {
@@ -635,9 +638,9 @@ export async function breakInByPin(pin: string): Promise<ClockResult> {
 
     // 現在時刻を取得して丸める
     const { actualUtc, effectiveUtc, actualLocal, effectiveLocal } = getRoundedNow(
-      clinic.timezone,
-      clinic.rounding_unit,
-      clinic.rounding_mode
+      unit.timezone,
+      unit.rounding_unit,
+      unit.rounding_mode
     )
 
     // 勤怠レコードを更新
@@ -665,8 +668,8 @@ export async function breakInByPin(pin: string): Promise<ClockResult> {
     // ログを記録
     const logInsert: AttendanceLogInsert = {
       attendance_id: existingAttendance.id,
-      clinic_id: staff.clinic_id,
-      staff_id: staff.id,
+      unit_id: employee.unit_id,
+      employee_id: employee.id,
       log_type: 'break_in',
       triggered_by_admin_user_id: null, // タブレット打刻時はnull
     }
@@ -684,7 +687,7 @@ export async function breakInByPin(pin: string): Promise<ClockResult> {
     return {
       success: true,
       message: '戻り打刻が完了しました',
-      staffName: staff.name,
+      staffName: employee.name,
       clockType: 'break_in',
       actualTime: actualLocal,
       effectiveTime: effectiveLocal,

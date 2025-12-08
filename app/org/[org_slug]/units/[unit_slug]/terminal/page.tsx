@@ -25,7 +25,7 @@ interface StaffStatus {
   attendanceId?: string
 }
 
-export default function Home() {
+export default function TerminalPage() {
   const [state, setState] = useState<ClockState>('idle')
   const [result, setResult] = useState<ClockResult | null>(null)
   const [staffStatus, setStaffStatus] = useState<StaffStatus | null>(null)
@@ -317,3 +317,4 @@ export default function Home() {
     </main>
   )
 }
+

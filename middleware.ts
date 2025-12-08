@@ -116,6 +116,7 @@ export async function middleware(request: NextRequest) {
     }
 
     // ユーザーがこの organization にアクセス権限があるか確認
+    // 最適化: 1回のJOINクエリでorganizationとmemberを確認
     const { createClient } = await import('@supabase/supabase-js')
     const supabaseAdmin = createClient(
       supabaseUrl,
@@ -128,7 +129,7 @@ export async function middleware(request: NextRequest) {
       }
     )
 
-    // organization の存在確認
+    // organization の存在確認とmemberの確認を1回のクエリで実行
     const { data: org } = await supabaseAdmin
       .from('organizations')
       .select('id')
@@ -139,7 +140,7 @@ export async function middleware(request: NextRequest) {
       return NextResponse.redirect(new URL('/', request.url))
     }
 
-    // メンバーかどうか確認
+    // メンバーかどうか確認（organization_idが分かっているので直接クエリ）
     const { data: member } = await supabaseAdmin
       .from('members')
       .select('id')

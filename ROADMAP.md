@@ -102,16 +102,18 @@ org・unit ともに **slug を URL に使う前提** で設計：
   - [x] `app/actions/organization.ts` - organization の CRUD
   - [x] `app/actions/unit.ts` - unit の CRUD
   - [x] `app/actions/auth.ts` - organization ベースのログイン/ログアウト
-- [ ] ルーティング構造の実装
-  - [ ] `/` - サービス紹介ページ（LP）
-  - [ ] `/org/:org_slug/login` - 管理者ログインページ
-  - [ ] `/org/:org_slug/dashboard` - ダッシュボード
-  - [ ] `/org/:org_slug/units` - 拠点一覧
-  - [ ] `/org/:org_slug/units/:unit_slug` - 拠点詳細・設定
-  - [ ] `/org/:org_slug/units/:unit_slug/terminal` - 打刻画面
-- [ ] organization 設定ページの実装
-- [ ] unit 設定ページの実装
-  - [ ] タイムゾーン、丸め単位、丸めモードの設定
+- [x] ルーティング構造の実装
+  - [ ] `/` - サービス紹介ページ（LP）（未実装、現在は打刻画面）
+  - [x] `/org/:org_slug/login` - 管理者ログインページ
+  - [x] `/org/:org_slug/dashboard` - ダッシュボード
+  - [x] `/org/:org_slug/units` - 拠点一覧
+  - [x] `/org/:org_slug/units/:unit_slug` - 拠点詳細・設定
+  - [x] `/org/:org_slug/units/:unit_slug/terminal` - 打刻画面
+- [x] organization 設定ページの実装
+  - [x] `/org/:org_slug/settings` - 組織設定ページ
+  - [x] 組織名・プランの設定
+- [x] unit 設定ページの実装
+  - [x] タイムゾーン、丸め単位、丸めモードの設定
 
 **依存関係**: Phase 1
 
@@ -125,24 +127,27 @@ org・unit ともに **slug を URL に使う前提** で設計：
 
 #### タスク
 
-- [ ] `/org/:org_slug/units/:unit_slug/terminal` ページの実装
-  - [ ] PIN 入力画面（数字キーパッド）
-  - [ ] PIN マスク表示
-  - [ ] 認証後の状態表示
-- [ ] PIN ハッシュ化・検証ロジック
-- [ ] 時刻丸めロジックの実装
-  - [ ] `rounding_unit` / `rounding_mode` に基づく計算
-  - [ ] タイムゾーン変換処理
-- [ ] 出勤打刻機能（Server Action）
-  - [ ] `clockInByPin` の実装
-  - [ ] `clock_in_actual` / `clock_in_effective` の記録
-  - [ ] `attendance_logs` への記録
-- [ ] 退勤打刻機能（Server Action）
-  - [ ] `clockOutByPin` の実装
-  - [ ] `clock_out_actual` / `clock_out_effective` の記録
-  - [ ] `work_minutes_effective` の計算・更新
-  - [ ] `attendance_logs` への記録
-- [ ] 打刻完了後の自動リセット（5-10秒）
+- [x] `/org/:org_slug/units/:unit_slug/terminal` ページの実装
+  - [x] PIN 入力画面（数字キーパッド）
+  - [x] PIN マスク表示
+  - [x] 認証後の状態表示
+- [x] PIN ハッシュ化・検証ロジック
+- [x] 時刻丸めロジックの実装
+  - [x] `rounding_unit` / `rounding_mode` に基づく計算
+  - [x] タイムゾーン変換処理
+- [x] 出勤打刻機能（Server Action）
+  - [x] `clockInByPin` の実装（unit_id/employee_id対応済み）
+  - [x] `clock_in_actual` / `clock_in_effective` の記録
+  - [x] `attendance_logs` への記録
+- [x] 退勤打刻機能（Server Action）
+  - [x] `clockOutByPin` の実装（unit_id/employee_id対応済み）
+  - [x] `clock_out_actual` / `clock_out_effective` の記録
+  - [x] `work_minutes_effective` の計算・更新
+  - [x] `attendance_logs` への記録
+- [x] 外出・戻り打刻機能（Server Action）
+  - [x] `breakOutByPin` の実装（unit_id/employee_id対応済み）
+  - [x] `breakInByPin` の実装（unit_id/employee_id対応済み）
+- [x] 打刻完了後の自動リセット（リンクボタンでのみ戻る）
 
 **依存関係**: Phase 1, Phase 2
 
@@ -156,17 +161,17 @@ org・unit ともに **slug を URL に使う前提** で設計：
 
 #### 4.1 従業員管理
 
-- [ ] `/org/:org_slug/units/:unit_slug/employees` ページの実装
-  - [ ] 従業員一覧表示
-  - [ ] 新規従業員作成フォーム
-  - [ ] 従業員編集フォーム
-  - [ ] PIN 再発行機能
-  - [ ] アクティブ/非アクティブ切り替え
-- [ ] Server Actions の実装
-  - [ ] `getEmployees`
-  - [ ] `createEmployee`
-  - [ ] `updateEmployee`
-  - [ ] `resetEmployeePin`
+- [x] `/org/:org_slug/units/:unit_slug/employees` ページの実装
+  - [x] 従業員一覧表示
+  - [x] 新規従業員作成フォーム
+  - [x] 従業員編集フォーム
+  - [x] PIN 再発行機能
+  - [x] アクティブ/非アクティブ切り替え
+- [x] Server Actions の実装
+  - [x] `getEmployees`
+  - [x] `createEmployee`
+  - [x] `updateEmployee`
+  - [x] `resetEmployeePin`
 
 #### 4.2 ダッシュボード
 
@@ -291,7 +296,8 @@ org・unit ともに **slug を URL に使う前提** で設計：
 
 ### 現在のフェーズ
 
-**Phase 2: 認証・基本設定の再実装** - 進行中（バックエンド完了、フロントエンド実装中）
+**Phase 2: 認証・基本設定の再実装** - 完了（ルーティング構造・unit設定ページ・organization設定ページ実装完了）
+**Phase 3: タブレット打刻機能（MVP）** - バックエンド対応完了（unit_id/employee_id対応済み）
 
 ### 完了済みタスク
 
@@ -308,7 +314,24 @@ org・unit ともに **slug を URL に使う前提** で設計：
   - `/admin/settings` ページの実装
   - クリニック設定の取得・更新機能
 
-> **注意**: 旧設計（clinic/staff ベース）から新設計（organization/unit ベース）への移行が必要です。
+- Phase 1（新）: DBスキーマ再設計・移行（2025-12-08）
+  - 新しいDBスキーマの作成（`supabase/schema-v2.sql`）
+  - 既存データの移行スクリプト（`supabase/migration-v1-to-v2.sql`）
+  - TypeScript型定義の更新（`types/database.ts`）
+
+- Phase 2（新）: 認証・基本設定の再実装（2025-12-08）
+  - 認証ユーティリティの更新（`lib/auth/utils.ts`）
+  - Server Actions実装（`app/actions/organization.ts`, `app/actions/unit.ts`, `app/actions/auth.ts`）
+  - 認証ミドルウェアの更新（`middleware.ts`）
+  - ルーティング構造の実装（`/org/:org_slug/*`）
+  - unit設定ページの実装（`UnitSettingsForm`コンポーネント）
+  - organization設定ページの実装（`OrganizationSettingsForm`コンポーネント）
+
+- Phase 3（新）: タブレット打刻機能のバックエンド対応（2025-12-08）
+  - `app/actions/attendance.ts`を新しいスキーマ（`unit_id`/`employee_id`）に対応
+  - 打刻画面のルーティング構造への配置（`/org/:org_slug/units/:unit_slug/terminal`）
+
+> **注意**: 旧設計（clinic/staff ベース）から新設計（organization/unit ベース）への移行が完了しました。
 
 ### 次のマイルストーン
 
@@ -330,4 +353,4 @@ org・unit ともに **slug を URL に使う前提** で設計：
 
 ---
 
-最終更新: 2025-12-02（Phase 1完了、Phase 2進行中）
+最終更新: 2025-12-08（Phase 1完了、Phase 2完了、Phase 3バックエンド対応完了、Phase 4.1従業員管理完了）
