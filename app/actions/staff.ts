@@ -7,7 +7,7 @@ import type { Staff, StaffInsert, StaffUpdate } from '@/types/database'
 import { revalidatePath } from 'next/cache'
 
 /**
- * スタッフ一覧を取得
+ * スタッフ一覧を取得（後方互換性のため、organizationの最初のunitのemployeesを返す）
  */
 export async function getStaffs(): Promise<{ success: boolean; staffs?: Staff[]; message?: string }> {
   try {
@@ -19,11 +19,27 @@ export async function getStaffs(): Promise<{ success: boolean; staffs?: Staff[];
       }
     }
 
+    // 新しいスキーマでは、organizationの最初のunitを取得
     const supabaseAdmin = getSupabaseAdmin()
+    const { data: unit, error: unitError } = await supabaseAdmin
+      .from('units')
+      .select('id')
+      .eq('organization_id', admin.organization_id)
+      .order('created_at', { ascending: true })
+      .limit(1)
+      .single()
+
+    if (unitError || !unit) {
+      return {
+        success: false,
+        message: '拠点が見つかりません',
+      }
+    }
+
     const { data, error } = await supabaseAdmin
-      .from('staffs')
+      .from('employees')
       .select('*')
-      .eq('clinic_id', admin.clinic_id)
+      .eq('unit_id', unit.id)
       .order('created_at', { ascending: false })
 
     if (error) {
@@ -76,11 +92,27 @@ export async function createStaff(
     // PINをハッシュ化
     const pinHash = await hashPin(pin)
 
+    // 新しいスキーマでは、organizationの最初のunitを取得
     const supabaseAdmin = getSupabaseAdmin()
+    const { data: unit, error: unitError } = await supabaseAdmin
+      .from('units')
+      .select('id')
+      .eq('organization_id', admin.organization_id)
+      .order('created_at', { ascending: true })
+      .limit(1)
+      .single()
+
+    if (unitError || !unit) {
+      return {
+        success: false,
+        message: '拠点が見つかりません',
+      }
+    }
+
     const { data, error } = await supabaseAdmin
-      .from('staffs')
+      .from('employees')
       .insert({
-        clinic_id: admin.clinic_id,
+        unit_id: unit.id,
         name: name.trim(),
         hourly_wage: hourlyWage,
         pin_hash: pinHash,
@@ -127,13 +159,29 @@ export async function updateStaff(
       }
     }
 
-    // スタッフがこのクリニックに属しているか確認
+    // 新しいスキーマでは、organizationの最初のunitを取得
     const supabaseAdmin = getSupabaseAdmin()
+    const { data: unit, error: unitError } = await supabaseAdmin
+      .from('units')
+      .select('id')
+      .eq('organization_id', admin.organization_id)
+      .order('created_at', { ascending: true })
+      .limit(1)
+      .single()
+
+    if (unitError || !unit) {
+      return {
+        success: false,
+        message: '拠点が見つかりません',
+      }
+    }
+
+    // スタッフがこのunitに属しているか確認
     const { data: existingStaff, error: fetchError } = await supabaseAdmin
-      .from('staffs')
+      .from('employees')
       .select('*')
       .eq('id', staffId)
-      .eq('clinic_id', admin.clinic_id)
+      .eq('unit_id', unit.id)
       .single()
 
     if (fetchError || !existingStaff) {
@@ -156,10 +204,10 @@ export async function updateStaff(
     }
 
     const { data, error } = await supabaseAdmin
-      .from('staffs')
+      .from('employees')
       .update(updateData)
       .eq('id', staffId)
-      .eq('clinic_id', admin.clinic_id)
+      .eq('unit_id', unit.id)
       .select()
       .single()
 
@@ -209,13 +257,29 @@ export async function resetStaffPin(
       }
     }
 
-    // スタッフがこのクリニックに属しているか確認
+    // 新しいスキーマでは、organizationの最初のunitを取得
     const supabaseAdmin = getSupabaseAdmin()
+    const { data: unit, error: unitError } = await supabaseAdmin
+      .from('units')
+      .select('id')
+      .eq('organization_id', admin.organization_id)
+      .order('created_at', { ascending: true })
+      .limit(1)
+      .single()
+
+    if (unitError || !unit) {
+      return {
+        success: false,
+        message: '拠点が見つかりません',
+      }
+    }
+
+    // スタッフがこのunitに属しているか確認
     const { data: existingStaff, error: fetchError } = await supabaseAdmin
-      .from('staffs')
+      .from('employees')
       .select('*')
       .eq('id', staffId)
-      .eq('clinic_id', admin.clinic_id)
+      .eq('unit_id', unit.id)
       .single()
 
     if (fetchError || !existingStaff) {
@@ -229,10 +293,10 @@ export async function resetStaffPin(
     const pinHash = await hashPin(newPin)
 
     const { error } = await supabaseAdmin
-      .from('staffs')
+      .from('employees')
       .update({ pin_hash: pinHash })
       .eq('id', staffId)
-      .eq('clinic_id', admin.clinic_id)
+      .eq('unit_id', unit.id)
 
     if (error) {
       console.error('Error resetting PIN:', error)
