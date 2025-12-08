@@ -109,6 +109,7 @@ async function getTodayAttendance(
 
 /**
  * 当日の勤怠レコードを取得（状態に関係なく）
+ * 複数レコードがある場合は、最新のもの（status='open'を優先、なければ最新）を返す
  */
 async function getTodayAttendanceAnyStatus(
   clinicId: string,
@@ -117,12 +118,35 @@ async function getTodayAttendanceAnyStatus(
 ): Promise<Attendance | null> {
   const supabaseAdmin = getSupabaseAdmin()
 
+  // まず、status='open'のレコードを優先的に取得
+  const { data: openData, error: openError } = await supabaseAdmin
+    .from('attendances')
+    .select('*')
+    .eq('clinic_id', clinicId)
+    .eq('staff_id', staffId)
+    .eq('work_date', workDate)
+    .eq('status', 'open')
+    .order('created_at', { ascending: false })
+    .limit(1)
+    .maybeSingle()
+
+  if (openError) {
+    console.error('Error fetching open attendance:', openError)
+  }
+
+  if (openData) {
+    return openData as Attendance
+  }
+
+  // status='open'のレコードがない場合、最新のレコードを取得
   const { data, error } = await supabaseAdmin
     .from('attendances')
     .select('*')
     .eq('clinic_id', clinicId)
     .eq('staff_id', staffId)
     .eq('work_date', workDate)
+    .order('created_at', { ascending: false })
+    .limit(1)
     .maybeSingle()
 
   if (error) {
@@ -193,7 +217,10 @@ export async function getStaffStatusByPin(pin: string): Promise<{ success: boole
     let attendance: Attendance | null = null
     try {
       attendance = await getTodayAttendanceAnyStatus(staff.clinic_id, staff.id, today)
-      console.log('getStaffStatusByPin: Attendance:', attendance ? `found (status: ${attendance.status})` : 'not found')
+      console.log('getStaffStatusByPin: Attendance:', attendance ? `found (status: ${attendance.status}, break_out: ${attendance.break_out_actual}, break_in: ${attendance.break_in_actual})` : 'not found')
+      if (attendance) {
+        console.log('getStaffStatusByPin: Full attendance data:', JSON.stringify(attendance, null, 2))
+      }
     } catch (error) {
       console.error('getStaffStatusByPin: Error fetching attendance:', error)
       // エラーが発生しても続行（attendanceはnullのまま）
@@ -206,11 +233,19 @@ export async function getStaffStatusByPin(pin: string): Promise<{ success: boole
       !attendance.break_in_actual
     )
 
+    const hasAttendance = !!attendance && attendance.status === 'open'
+    console.log('getStaffStatusByPin: hasAttendance calculation:', {
+      hasAttendance,
+      attendanceExists: !!attendance,
+      status: attendance?.status,
+      isOnBreak,
+    })
+
     const status: StaffStatus = {
       staffId: staff.id,
       staffName: staff.name,
       clinicId: staff.clinic_id,
-      hasAttendance: !!attendance && attendance.status === 'open',
+      hasAttendance,
       isOnBreak,
       attendanceId: attendance?.id,
     }

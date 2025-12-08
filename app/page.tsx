@@ -153,15 +153,20 @@ export default function Home() {
         {state === 'action_selection' && staffStatus && (
           <div className="text-center">
             <div className="bg-white border-2 border-gray-200 rounded-lg p-6 mb-6">
-              <p className="text-gray-800 font-semibold text-xl mb-2">{staffStatus.staffName}さん</p>
               {!staffStatus.hasAttendance && (
-                <p className="text-gray-600 text-lg">おはようございます！</p>
+                <>
+                  <p className="text-gray-800 font-semibold text-xl mb-2">{staffStatus.staffName}さん</p>
+                  <p className="text-gray-600 text-lg">おはようございます！</p>
+                </>
               )}
               {staffStatus.hasAttendance && (
-                <p className="text-gray-600 text-sm">
-                  出勤中
-                  {staffStatus.isOnBreak && '（外出中）'}
-                </p>
+                <>
+                  <p className="text-gray-600 text-lg mb-2">お疲れ様です！</p>
+                  <p className="text-gray-800 font-semibold text-xl">{staffStatus.staffName}さん</p>
+                  {staffStatus.isOnBreak && (
+                    <p className="text-gray-600 text-sm mt-2">（外出中）</p>
+                  )}
+                </>
               )}
             </div>
             <div className="grid grid-cols-2 gap-4">
@@ -229,18 +234,49 @@ export default function Home() {
         {state === 'success' && result && (
           <div className="text-center">
             <div className="bg-green-50 border-2 border-green-200 rounded-lg p-6 mb-4">
-              <p className="text-green-800 font-semibold text-xl mb-2">
-                {result.clockType === 'in' && '出勤'}
-                {result.clockType === 'out' && '退勤'}
-                {result.clockType === 'break_out' && '外出'}
-                {result.clockType === 'break_in' && '戻り'}
-                しました
-              </p>
-              {result.staffName && (
-                <p className="text-green-700 text-lg mb-2">{result.staffName}さん</p>
-              )}
-              {result.actualTime && (
-                <p className="text-green-700">打刻時刻: {result.actualTime}</p>
+              {result.clockType === 'break_out' ? (
+                <>
+                  <p className="text-green-800 font-semibold text-xl mb-2">いってらっしゃい！</p>
+                  {result.staffName && (
+                    <p className="text-green-700 text-lg mb-2">{result.staffName}さん</p>
+                  )}
+                  {result.actualTime && (
+                    <p className="text-green-700">打刻時間: {result.actualTime}</p>
+                  )}
+                </>
+              ) : result.clockType === 'break_in' ? (
+                <>
+                  <p className="text-green-800 font-semibold text-xl mb-2">おかえりなさい！</p>
+                  {result.staffName && (
+                    <p className="text-green-700 text-lg mb-2">{result.staffName}さん</p>
+                  )}
+                  {result.actualTime && (
+                    <p className="text-green-700">打刻時間: {result.actualTime}</p>
+                  )}
+                </>
+              ) : result.clockType === 'out' ? (
+                <>
+                  <p className="text-green-800 font-semibold text-xl mb-2">お疲れ様でした！</p>
+                  {result.staffName && (
+                    <p className="text-green-700 text-lg mb-2">{result.staffName}さん</p>
+                  )}
+                  {result.actualTime && (
+                    <p className="text-green-700">打刻時間: {result.actualTime}</p>
+                  )}
+                </>
+              ) : (
+                <>
+                  <p className="text-green-800 font-semibold text-xl mb-2">
+                    {result.clockType === 'in' && '出勤'}
+                    しました
+                  </p>
+                  {result.staffName && (
+                    <p className="text-green-700 text-lg mb-2">{result.staffName}さん</p>
+                  )}
+                  {result.actualTime && (
+                    <p className="text-green-700">打刻時刻: {result.actualTime}</p>
+                  )}
+                </>
               )}
             </div>
             <button
