@@ -227,6 +227,9 @@ export interface AttendanceLogInsert {
 /** @deprecated 後方互換性のため。Organization を使用してください */
 export type Clinic = Organization
 
+/** @deprecated 後方互換性のため。OrganizationUpdate を使用してください */
+export type ClinicUpdate = OrganizationUpdate
+
 /** @deprecated 後方互換性のため。Employee を使用してください */
 export type Staff = Employee
 
