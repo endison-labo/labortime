@@ -4,7 +4,7 @@ import { getSupabaseAdmin } from '@/lib/supabase/server'
 import { verifyPin } from '@/lib/utils/pin'
 import { getRoundedNow, formatWorkDate, formatTime } from '@/lib/utils/time'
 import type { Staff, Attendance, AttendanceLogInsert } from '@/types/database'
-import { revalidatePath } from 'next/cache'
+import { revalidatePath, unstable_noStore as noStore } from 'next/cache'
 
 interface ClockResult {
   success: boolean
@@ -137,6 +137,7 @@ async function getTodayAttendanceAnyStatus(
  * PIN入力後のスタッフ状態を取得
  */
 export async function getStaffStatusByPin(pin: string): Promise<{ success: boolean; status?: StaffStatus; message?: string }> {
+  noStore()
   try {
     console.log('getStaffStatusByPin: Starting PIN verification')
     

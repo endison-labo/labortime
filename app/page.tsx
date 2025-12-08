@@ -154,17 +154,22 @@ export default function Home() {
           <div className="text-center">
             <div className="bg-white border-2 border-gray-200 rounded-lg p-6 mb-6">
               <p className="text-gray-800 font-semibold text-xl mb-2">{staffStatus.staffName}さん</p>
-              <p className="text-gray-600 text-sm">
-                {staffStatus.hasAttendance ? '出勤中' : '未出勤'}
-                {staffStatus.isOnBreak && '（外出中）'}
-              </p>
+              {!staffStatus.hasAttendance && (
+                <p className="text-gray-600 text-lg">おはようございます！</p>
+              )}
+              {staffStatus.hasAttendance && (
+                <p className="text-gray-600 text-sm">
+                  出勤中
+                  {staffStatus.isOnBreak && '（外出中）'}
+                </p>
+              )}
             </div>
             <div className="grid grid-cols-2 gap-4">
               {!staffStatus.hasAttendance && (
                 <button
                   onClick={() => handleAction('in')}
                   disabled={isLoading}
-                  className="bg-blue-600 text-white px-6 py-4 rounded-lg text-lg font-semibold hover:bg-blue-700 active:bg-blue-800 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                  className="bg-blue-600 text-white px-6 py-4 rounded-lg text-lg font-semibold hover:bg-blue-700 active:bg-blue-800 disabled:opacity-50 disabled:cursor-not-allowed transition-colors col-span-2"
                 >
                   出勤
                 </button>
