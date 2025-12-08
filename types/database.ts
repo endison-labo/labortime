@@ -233,5 +233,11 @@ export type ClinicUpdate = OrganizationUpdate
 /** @deprecated 後方互換性のため。Employee を使用してください */
 export type Staff = Employee
 
+/** @deprecated 後方互換性のため。EmployeeInsert を使用してください */
+export type StaffInsert = EmployeeInsert
+
+/** @deprecated 後方互換性のため。EmployeeUpdate を使用してください */
+export type StaffUpdate = EmployeeUpdate
+
 /** @deprecated 後方互換性のため。Member を使用してください */
 export type Admin = Member
