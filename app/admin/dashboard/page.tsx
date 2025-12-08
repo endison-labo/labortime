@@ -18,7 +18,7 @@ export default async function DashboardPage() {
           <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-8">
             <h2 className="text-2xl font-bold text-slate-800 mb-4">ダッシュボード</h2>
             <p className="text-slate-600">管理者ID: {admin.id}</p>
-            <p className="text-slate-600">クリニックID: {admin.clinic_id}</p>
+            <p className="text-slate-600">組織ID: {admin.organization_id}</p>
             <p className="text-slate-600 mt-4">機能は順次実装予定です。</p>
           </div>
         </div>
