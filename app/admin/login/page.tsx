@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { signIn } from '@/app/actions/auth'
 
 export default function LoginPage() {
+  const [organizationSlug, setOrganizationSlug] = useState('')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState<string | null>(null)
@@ -15,7 +16,7 @@ export default function LoginPage() {
     setIsLoading(true)
 
     try {
-      const result = await signIn(email, password)
+      const result = await signIn(organizationSlug, email, password)
       if (result?.error) {
         setError(result.error)
         setIsLoading(false)
@@ -48,6 +49,21 @@ export default function LoginPage() {
             )}
             
             <div className="space-y-4">
+              <div>
+                <label htmlFor="organizationSlug" className="block text-sm font-medium text-slate-700 mb-1">
+                  組織スラッグ
+                </label>
+                <input
+                  id="organizationSlug"
+                  name="organizationSlug"
+                  type="text"
+                  required
+                  className="w-full px-4 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                  placeholder="組織スラッグを入力"
+                  value={organizationSlug}
+                  onChange={(e) => setOrganizationSlug(e.target.value)}
+                />
+              </div>
               <div>
                 <label htmlFor="email" className="block text-sm font-medium text-slate-700 mb-1">
                   メールアドレス
