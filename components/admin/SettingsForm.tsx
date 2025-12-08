@@ -10,9 +10,7 @@ interface SettingsFormProps {
 
 export default function SettingsForm({ clinic, updateAction }: SettingsFormProps) {
   const [name, setName] = useState(clinic.name)
-  const [timezone, setTimezone] = useState(clinic.timezone)
-  const [roundingUnit, setRoundingUnit] = useState(clinic.rounding_unit.toString())
-  const [roundingMode, setRoundingMode] = useState(clinic.rounding_mode)
+  const [plan, setPlan] = useState((clinic as any).plan || 'single')
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState(false)
@@ -26,11 +24,7 @@ export default function SettingsForm({ clinic, updateAction }: SettingsFormProps
     try {
       const updates: ClinicUpdate = {
         name: name !== clinic.name ? name : undefined,
-        timezone: timezone !== clinic.timezone ? timezone : undefined,
-        rounding_unit: roundingUnit !== clinic.rounding_unit.toString() 
-          ? parseInt(roundingUnit, 10) 
-          : undefined,
-        rounding_mode: roundingMode !== clinic.rounding_mode ? roundingMode : undefined,
+        plan: plan !== (clinic as any).plan ? plan : undefined,
       }
 
       // undefined の値を削除
@@ -73,7 +67,7 @@ export default function SettingsForm({ clinic, updateAction }: SettingsFormProps
 
       <div>
         <label htmlFor="name" className="block text-sm font-medium text-gray-700">
-          クリニック名
+          組織名
         </label>
         <input
           type="text"
@@ -86,52 +80,27 @@ export default function SettingsForm({ clinic, updateAction }: SettingsFormProps
       </div>
 
       <div>
-        <label htmlFor="timezone" className="block text-sm font-medium text-gray-700">
-          タイムゾーン
+        <label htmlFor="plan" className="block text-sm font-medium text-gray-700">
+          プラン
         </label>
         <select
-          id="timezone"
-          value={timezone}
-          onChange={(e) => setTimezone(e.target.value)}
+          id="plan"
+          value={plan}
+          onChange={(e) => setPlan(e.target.value)}
           className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
         >
-          <option value="Asia/Tokyo">Asia/Tokyo (JST)</option>
-          <option value="UTC">UTC</option>
+          <option value="single">単拠点プラン（拠点1件まで）</option>
+          <option value="multi">複数拠点プラン（拠点複数作成可能）</option>
         </select>
+        <p className="mt-1 text-sm text-gray-500">
+          プランを変更すると、拠点数の制限が変わります。
+        </p>
       </div>
 
-      <div>
-        <label htmlFor="roundingUnit" className="block text-sm font-medium text-gray-700">
-          丸め単位（分）
-        </label>
-        <select
-          id="roundingUnit"
-          value={roundingUnit}
-          onChange={(e) => setRoundingUnit(e.target.value)}
-          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
-        >
-          <option value="1">1分</option>
-          <option value="5">5分</option>
-          <option value="10">10分</option>
-          <option value="15">15分</option>
-          <option value="30">30分</option>
-        </select>
-      </div>
-
-      <div>
-        <label htmlFor="roundingMode" className="block text-sm font-medium text-gray-700">
-          丸めモード
-        </label>
-        <select
-          id="roundingMode"
-          value={roundingMode}
-          onChange={(e) => setRoundingMode(e.target.value as 'floor' | 'ceil' | 'nearest')}
-          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
-        >
-          <option value="floor">切り捨て</option>
-          <option value="ceil">切り上げ</option>
-          <option value="nearest">四捨五入</option>
-        </select>
+      <div className="rounded-md bg-gray-50 p-4">
+        <p className="text-sm text-gray-600">
+          <strong>注意:</strong> タイムゾーン、丸め単位、丸めモードの設定は、各拠点の設定ページで変更できます。
+        </p>
       </div>
 
       <div>
