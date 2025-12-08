@@ -11,7 +11,7 @@ export type Json =
 
 export type AttendanceSource = 'tablet' | 'admin'
 export type AttendanceStatus = 'open' | 'closed'
-export type AttendanceLogType = 'create' | 'clock_in' | 'clock_out' | 'edit'
+export type AttendanceLogType = 'create' | 'clock_in' | 'clock_out' | 'break_out' | 'break_in' | 'edit'
 export type RoundingMode = 'floor' | 'ceil' | 'nearest'
 
 export interface Clinic {
@@ -52,6 +52,10 @@ export interface Attendance {
   clock_out_effective: string | null
   clock_in_source: AttendanceSource | null
   clock_out_source: AttendanceSource | null
+  break_out_actual: string | null
+  break_out_effective: string | null
+  break_in_actual: string | null
+  break_in_effective: string | null
   status: AttendanceStatus
   work_minutes_effective: number
   has_manual_correction: boolean
@@ -106,6 +110,10 @@ export interface AttendanceInsert {
   clock_out_effective?: string | null
   clock_in_source?: AttendanceSource | null
   clock_out_source?: AttendanceSource | null
+  break_out_actual?: string | null
+  break_out_effective?: string | null
+  break_in_actual?: string | null
+  break_in_effective?: string | null
   status?: AttendanceStatus
   work_minutes_effective?: number
   has_manual_correction?: boolean
@@ -139,6 +147,10 @@ export interface AttendanceUpdate {
   clock_out_effective?: string | null
   clock_in_source?: AttendanceSource | null
   clock_out_source?: AttendanceSource | null
+  break_out_actual?: string | null
+  break_out_effective?: string | null
+  break_in_actual?: string | null
+  break_in_effective?: string | null
   status?: AttendanceStatus
   work_minutes_effective?: number
   has_manual_correction?: boolean
@@ -151,6 +163,11 @@ export interface ClinicUpdate {
   rounding_unit?: number
   rounding_mode?: RoundingMode
 }
+
+
+
+
+
 
 
 

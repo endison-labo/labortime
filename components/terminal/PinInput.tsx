@@ -15,7 +15,8 @@ export default function PinInput({ onPinSubmit, isLoading = false }: PinInputPro
     if (pin.length === 4 && !isLoading) {
       onPinSubmit(pin)
     }
-  }, [pin, isLoading, onPinSubmit])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pin, isLoading])
 
   const handleNumberClick = (num: number) => {
     if (pin.length < 4 && !isLoading) {
@@ -54,13 +55,13 @@ export default function PinInput({ onPinSubmit, isLoading = false }: PinInputPro
       </div>
 
       {/* 数字キーパッド */}
-      <div className="grid grid-cols-3 gap-4 mb-4">
+      <div className="grid grid-cols-3 gap-4 w-full">
         {[1, 2, 3, 4, 5, 6, 7, 8, 9].map((num) => (
           <button
             key={num}
             onClick={() => handleNumberClick(num)}
             disabled={isLoading || pin.length >= 4}
-            className="aspect-square bg-white border-2 border-gray-300 rounded-lg text-3xl font-bold text-gray-700 hover:bg-gray-50 hover:border-blue-500 active:bg-blue-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            className="aspect-square bg-white border-2 border-gray-300 rounded-lg text-3xl font-bold text-gray-700 hover:bg-gray-50 hover:border-blue-500 active:bg-blue-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center justify-center min-h-[80px]"
           >
             {num}
           </button>
@@ -68,21 +69,21 @@ export default function PinInput({ onPinSubmit, isLoading = false }: PinInputPro
         <button
           onClick={handleClear}
           disabled={isLoading || pin.length === 0}
-          className="aspect-square bg-gray-100 border-2 border-gray-300 rounded-lg text-lg font-semibold text-gray-700 hover:bg-gray-200 active:bg-gray-300 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+          className="aspect-square bg-gray-100 border-2 border-gray-300 rounded-lg text-lg font-semibold text-gray-700 hover:bg-gray-200 active:bg-gray-300 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center justify-center min-h-[80px]"
         >
           クリア
         </button>
         <button
           onClick={() => handleNumberClick(0)}
           disabled={isLoading || pin.length >= 4}
-          className="aspect-square bg-white border-2 border-gray-300 rounded-lg text-3xl font-bold text-gray-700 hover:bg-gray-50 hover:border-blue-500 active:bg-blue-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+          className="aspect-square bg-white border-2 border-gray-300 rounded-lg text-3xl font-bold text-gray-700 hover:bg-gray-50 hover:border-blue-500 active:bg-blue-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center justify-center min-h-[80px]"
         >
           0
         </button>
         <button
           onClick={handleDelete}
           disabled={isLoading || pin.length === 0}
-          className="aspect-square bg-gray-100 border-2 border-gray-300 rounded-lg text-lg font-semibold text-gray-700 hover:bg-gray-200 active:bg-gray-300 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+          className="aspect-square bg-gray-100 border-2 border-gray-300 rounded-lg text-lg font-semibold text-gray-700 hover:bg-gray-200 active:bg-gray-300 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center justify-center min-h-[80px]"
         >
           削除
         </button>
