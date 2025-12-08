@@ -6,7 +6,7 @@ import type { Clinic, ClinicUpdate } from '@/types/database'
 import { revalidatePath } from 'next/cache'
 
 /**
- * クリニック設定を取得
+ * クリニック設定を取得（後方互換性のため、organizationを返す）
  */
 export async function getClinicSettings(): Promise<Clinic | null> {
   const admin = await getCurrentAdmin()
@@ -15,10 +15,11 @@ export async function getClinicSettings(): Promise<Clinic | null> {
   }
 
   const supabaseAdmin = getSupabaseAdmin()
+  // 新しいスキーマでは organization_id を使用
   const { data, error } = await supabaseAdmin
-    .from('clinics')
+    .from('organizations')
     .select('*')
-    .eq('id', admin.clinic_id)
+    .eq('id', admin.organization_id)
     .single()
 
   if (error || !data) {
@@ -30,7 +31,7 @@ export async function getClinicSettings(): Promise<Clinic | null> {
 }
 
 /**
- * クリニック設定を更新
+ * クリニック設定を更新（後方互換性のため、organizationを更新）
  */
 export async function updateClinicSettings(
   updates: ClinicUpdate
@@ -41,10 +42,11 @@ export async function updateClinicSettings(
   }
 
   const supabaseAdmin = getSupabaseAdmin()
+  // 新しいスキーマでは organization_id を使用
   const { error } = await supabaseAdmin
-    .from('clinics')
+    .from('organizations')
     .update(updates)
-    .eq('id', admin.clinic_id)
+    .eq('id', admin.organization_id)
 
   if (error) {
     console.error('Error updating clinic settings:', error)
