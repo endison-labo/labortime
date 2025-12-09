@@ -3,7 +3,7 @@
 **Labor Time** は、汎用性の高い勤怠管理SaaSシステムです。小規模事業から複数拠点を持つ企業まで、様々な業種・規模に対応できます。
 
 - **サービス名**: Labor Time（レイバータイム）
-- **ドメイン**: [labortime.work](https://labortime.work)
+- **ドメイン**: [labortime.work](https://labortime.work) / [www.labortime.work](https://www.labortime.work)
 
 ## システム概要
 
