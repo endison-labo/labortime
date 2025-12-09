@@ -1,0 +1,46 @@
+;;
+;; Domain:     handra.jp.
+;; Exported:   2025-12-09 02:59:15
+;;
+;; This file is intended for use for informational and archival
+;; purposes ONLY and MUST be edited before use on a production
+;; DNS server.  In particular, you must:
+;;   -- update the SOA record with the correct authoritative name server
+;;   -- update the SOA record with the contact e-mail address information
+;;   -- update the NS record(s) with the authoritative name servers for this domain.
+;;
+;; For further information, please consult the BIND documentation
+;; located on the following website:
+;;
+;; http://www.isc.org/
+;;
+;; And RFC 1035:
+;;
+;; http://www.ietf.org/rfc/rfc1035.txt
+;;
+;; Please note that we do NOT offer technical support for any use
+;; of this zone data, the BIND name server, or any other third-party
+;; DNS software.
+;;
+;; Use at your own risk.
+;; SOA Record
+handra.jp	3600	IN	SOA	newt.ns.cloudflare.com. dns.cloudflare.com. 2051691575 10000 2400 604800 3600
+
+;; NS Records
+handra.jp.	86400	IN	NS	newt.ns.cloudflare.com.
+handra.jp.	86400	IN	NS	ollie.ns.cloudflare.com.
+
+;; A Records
+handra.jp.	1	IN	A	76.76.21.21 ; cf_tags=cf-proxied:false
+
+;; CNAME Records
+www.handra.jp.	1	IN	CNAME	cname.vercel-dns.com. ; cf_tags=cf-proxied:false
+
+;; MX Records
+handra.jp.	1	IN	MX	10 sv16631.xserver.jp.
+send.handra.jp.	3600	IN	MX	10 feedback-smtp.ap-northeast-1.amazonses.com.
+
+;; TXT Records
+handra.jp.	1	IN	TXT	"v=spf1 +a:sv16631.xserver.jp +mx include:resend.com ~all"
+resend._domainkey.handra.jp.	3600	IN	TXT	"p=MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQDX5IEAhK3onSB4wEf6pOLNQcDs48YEnVX7DCrO0oGUuSjSwXMU6GJX7u5dDDGQS1s2NVKXHrP21VvPMtgdOhCcdLD/uI+n/OZzU72t3zwJ7wmI0j/EPG2fEMWDRJR33RuUUKFlyzPEYkqei/1tiXcTErCp1pkZI0FDGnvKhnSajwIDAQAB"
+send.handra.jp.	3600	IN	TXT	"v=spf1 include:amazonses.com ~all"

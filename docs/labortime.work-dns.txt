@@ -1,0 +1,27 @@
+;;
+;; Domain:     labortime.work.
+;; Exported:   2025-12-09
+;;
+;; This file is intended for use for informational and archival
+;; purposes ONLY and MUST be edited before use on a production
+;; DNS server.
+;;
+;; Cloudflare DNS設定の参考用ファイル
+;;
+
+;; A Records
+labortime.work.	1	IN	A	76.76.21.21 ; cf_tags=cf-proxied:false
+
+;; CNAME Records
+www.labortime.work.	1	IN	CNAME	cname.vercel-dns.com. ; cf_tags=cf-proxied:false
+
+;; MX Records
+labortime.work.	1	IN	MX	10 sv16631.xserver.jp.
+send.labortime.work.	3600	IN	MX	10 feedback-smtp.ap-northeast-1.amazonses.com.
+
+;; TXT Records
+labortime.work.	1	IN	TXT	"v=spf1 +a:sv16631.xserver.jp +mx include:resend.com ~all"
+send.labortime.work.	3600	IN	TXT	"v=spf1 include:amazonses.com ~all"
+;; NOTE: resend._domainkey.labortime.work のDKIMキーはResendダッシュボードから取得してください
+;; resend._domainkey.labortime.work.	3600	IN	TXT	"p=YOUR_DKIM_KEY_FROM_RESEND"
+
