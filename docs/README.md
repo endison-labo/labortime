@@ -93,18 +93,33 @@ npm run dev
 
 ```
 .
-├── app/                    # Next.js App Router
-│   ├── actions/           # Server Actions
-│   ├── org/              # organization ルート
-│   │   └── [org_slug]/   # 動的ルーティング
+├── app/                           # Next.js App Router
+│   ├── actions/                  # Server Actions
+│   ├── org/                      # organization ルート
+│   │   └── [org_slug]/          # 動的ルーティング
+│   │       ├── layout.tsx        # 共通ルートレイアウト
+│   │       ├── (auth)/           # 認証関連ページ（ルートグループ）
+│   │       │   ├── layout.tsx   # ログイン用レイアウト（シンプル）
+│   │       │   └── login/       # ログイン画面
+│   │       └── (app)/            # アプリケーション画面（ルートグループ）
+│   │           ├── layout.tsx   # アプリ用レイアウト（サイドバー+ヘッダー）
+│   │           ├── dashboard/   # ダッシュボード
+│   │           ├── settings/    # 組織設定
+│   │           └── units/       # 拠点管理
 │   └── ...
-├── components/            # React コンポーネント
-├── lib/                   # ユーティリティ
-│   ├── auth/             # 認証関連
-│   └── supabase/         # Supabase クライアント
-├── types/                 # TypeScript 型定義
-├── supabase/             # DB スキーマ SQL
-└── scripts/              # 初期化スクリプト
+├── components/                   # React コンポーネント
+│   ├── org/                     # 組織管理画面用コンポーネント
+│   │   ├── SideNav.tsx         # 左サイドメニュー
+│   │   ├── OrgHeader.tsx       # 上部ヘッダー
+│   │   └── OrgLayoutClient.tsx # レイアウトクライアントコンポーネント
+│   ├── contact/                # お問い合わせフォーム
+│   └── ...
+├── lib/                         # ユーティリティ
+│   ├── auth/                   # 認証関連
+│   └── supabase/               # Supabase クライアント
+├── types/                       # TypeScript 型定義
+├── supabase/                   # DB スキーマ SQL
+└── scripts/                    # 初期化スクリプト
 ```
 
 ## Slug 方針
@@ -124,6 +139,11 @@ npm run dev
 
 ### 公開ページ
 - `/` - ランディングページ（LP）
+  - お問い合わせフォーム（デモ画面閲覧希望者向け）
+
+### デモアカウント
+- `/org/demo/dashboard` - デモダッシュボード（認証不要で閲覧可能）
+- `/org/demo/login` - デモアカウントログイン
 
 ### 管理者ページ（認証必須）
 - `/org/:org_slug/login` - 管理者ログイン
@@ -161,12 +181,19 @@ npm run dev
 - ✅ Phase 2: 認証・基本設定の再実装
 - ✅ Phase 3: タブレット打刻機能（MVP）
 - ✅ Phase 4.1: 従業員管理
+- ✅ LP実装: ランディングページとお問い合わせフォーム
+- ✅ デモアカウント設定: 見込み客向けデモ機能
+- ✅ UI/UX改善: 大手勤怠SaaSパターンに合わせた左サイドメニュー + 上部ヘッダー構成
+  - ✅ 左サイドメニュー（固定）の実装
+  - ✅ 上部ヘッダー（組織名・ユーザー情報・ログアウト）の実装
+  - ✅ レスポンシブ対応（モバイル用ハンバーガーメニュー）
+  - ✅ ルートグループによるログイン画面とアプリ画面の分離
 
 ### 開発中
-- 🔄 Phase 4.2: ダッシュボード
+- 🔄 Phase 4.2: ダッシュボード（基本実装済み、機能拡張予定）
 - 🔄 Phase 4.3: 勤怠一覧
 - 🔄 Phase 4.4: 勤怠詳細・修正
-- 🔄 Phase 4.5: 拠点管理
+- 🔄 Phase 4.5: 拠点管理（基本実装済み、機能拡張予定）
 
 詳細は [ROADMAP.md](./ROADMAP.md) を参照してください。
 
@@ -174,3 +201,4 @@ npm run dev
 
 - [ROADMAP.md](./ROADMAP.md) - 実装ロードマップ
 - [daily-report.md](./daily-report.md) - 日次開発レポート
+- [demo-account-setup.md](./demo-account-setup.md) - デモアカウントのセットアップ方法

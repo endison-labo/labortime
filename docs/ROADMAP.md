@@ -103,12 +103,22 @@ org・unit ともに **slug を URL に使う前提** で設計：
   - [x] `app/actions/unit.ts` - unit の CRUD
   - [x] `app/actions/auth.ts` - organization ベースのログイン/ログアウト
 - [x] ルーティング構造の実装
-  - [ ] `/` - サービス紹介ページ（LP）（未実装、現在は打刻画面）
+  - [x] `/` - サービス紹介ページ（LP）とお問い合わせフォーム
   - [x] `/org/:org_slug/login` - 管理者ログインページ
   - [x] `/org/:org_slug/dashboard` - ダッシュボード
   - [x] `/org/:org_slug/units` - 拠点一覧
   - [x] `/org/:org_slug/units/:unit_slug` - 拠点詳細・設定
   - [x] `/org/:org_slug/units/:unit_slug/terminal` - 打刻画面
+- [x] ログアウト機能の実装
+- [x] デモアカウント機能の実装
+  - [x] デモ組織（`demo`）の設定
+  - [x] 認証なしで閲覧可能なデモダッシュボード
+  - [x] デモアカウント作成スクリプト
+- [x] お問い合わせフォームの実装
+  - [x] `contact_inquiries` テーブルの作成
+  - [x] `components/contact/ContactForm.tsx` の実装
+  - [x] `app/actions/contact.ts` の実装
+  - [x] LPへの統合
 - [x] organization 設定ページの実装
   - [x] `/org/:org_slug/settings` - 組織設定ページ
   - [x] 組織名・プランの設定
@@ -172,10 +182,20 @@ org・unit ともに **slug を URL に使う前提** で設計：
   - [x] `createEmployee`
   - [x] `updateEmployee`
   - [x] `resetEmployeePin`
+- [x] 組織レイアウト・ナビゲーションの実装
+  - [x] ルートグループによる画面分離（`(auth)` / `(app)`）
+  - [x] `components/org/SideNav.tsx` - 左サイドメニュー（大手勤怠SaaSパターン）
+  - [x] `components/org/OrgHeader.tsx` - 上部ヘッダー（組織名・ユーザー情報・ログアウト）
+  - [x] `components/org/OrgLayoutClient.tsx` - レイアウトクライアントコンポーネント
+  - [x] メニュー構成（ダッシュボード、勤怠管理、シフト管理、スタッフ管理、集計・出力、設定）
+  - [x] レスポンシブ対応（モバイル用ハンバーガーメニュー）
+  - [x] ログイン画面の分離（シンプルな中央配置レイアウト）
 
 #### 4.2 ダッシュボード
 
-- [ ] `/org/:org_slug/dashboard` ページの実装
+- [x] `/org/:org_slug/dashboard` ページの基本実装
+  - [x] 組織情報の表示
+  - [x] プラン情報の表示
   - [ ] 指定月のサマリー表示（全 unit 合計）
   - [ ] 総労働時間（organization 合計）
   - [ ] unit 別労働時間
@@ -208,15 +228,16 @@ org・unit ともに **slug を URL に使う前提** で設計：
 
 #### 4.5 拠点管理
 
-- [ ] `/org/:org_slug/units` ページの実装
-  - [ ] 拠点一覧表示
+- [x] `/org/:org_slug/units` ページの基本実装
+  - [x] 拠点一覧表示
   - [ ] 新規拠点作成フォーム（unit_slug 入力含む）
-  - [ ] 拠点編集フォーム
+  - [x] 拠点編集フォーム（基本実装済み）
   - [ ] 拠点削除機能（プラン制限チェック含む）
-- [ ] Server Actions の実装
-  - [ ] `getUnits`
+- [x] Server Actions の基本実装
+  - [x] `getUnits` / `getUnitsByOrganizationId`
+  - [x] `getUnitBySlug`
+  - [x] `updateUnit`
   - [ ] `createUnit`
-  - [ ] `updateUnit`
   - [ ] `deleteUnit`
 
 **依存関係**: Phase 1, Phase 2, Phase 3
@@ -260,10 +281,16 @@ org・unit ともに **slug を URL に使う前提** で設計：
 
 #### タスク
 
+- [x] UI/UX改善: 大手勤怠SaaSパターンへの統一
+  - [x] 左サイドメニュー + 上部ヘッダーの実装
+  - [x] レスポンシブ対応（モバイル用ハンバーガーメニュー）
+  - [x] ログイン画面とアプリ画面の分離（ルートグループ）
+  - [ ] フィルターバーの実装（勤怠一覧ページ）
+  - [ ] テーブル構造の改善（横スクロール対応、固定列）
+  - [ ] 「予定」と「実績」の横並び表示
 - [ ] RLS（Row Level Security）の設定・最適化
 - [ ] エラーハンドリングの強化
 - [ ] ローディング状態の改善
-- [ ] レスポンシブデザインの調整
 - [ ] アクセシビリティの向上
 - [ ] テストの追加（オプション）
 - [ ] パフォーマンス最適化
