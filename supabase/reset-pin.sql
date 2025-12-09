@@ -27,3 +27,5 @@ CREATE EXTENSION IF NOT EXISTS pgcrypto;
 -- FROM public.staffs 
 -- WHERE name = '山田太郎';
 
+
+

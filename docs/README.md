@@ -123,7 +123,7 @@ npm run dev
 ## URL 構造
 
 ### 公開ページ
-- `/` - 打刻画面（PIN入力）
+- `/` - ランディングページ（LP）
 
 ### 管理者ページ（認証必須）
 - `/org/:org_slug/login` - 管理者ログイン
@@ -131,7 +131,7 @@ npm run dev
 - `/org/:org_slug/settings` - 組織設定
 - `/org/:org_slug/units` - 拠点一覧
 - `/org/:org_slug/units/:unit_slug` - 拠点詳細・設定
-- `/org/:org_slug/units/:unit_slug/terminal` - 打刻画面
+- `/org/:org_slug/units/:unit_slug/terminal` - 打刻画面（PIN入力）
 - `/org/:org_slug/units/:unit_slug/employees` - 従業員管理
 - `/org/:org_slug/units/:unit_slug/attendances` - 勤怠一覧（未実装）
 

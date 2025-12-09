@@ -23,3 +23,4 @@ labortime.work.	1	IN	TXT	"v=spf1 +a:sv16631.xserver.jp +mx ~all"
 ;; - SPFレコードに include:resend.com を追加
 ;; - resend._domainkey.labortime.work のTXTレコード（Resendダッシュボードから取得）
 
+

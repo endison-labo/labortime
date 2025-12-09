@@ -6,7 +6,6 @@ import {
   updateEmployee,
   resetEmployeePin,
 } from '@/app/actions/employee'
-import Link from 'next/link'
 import EmployeeList from '@/components/admin/EmployeeList'
 import type { Employee } from '@/types/database'
 
@@ -18,12 +17,8 @@ export default async function EmployeesPage({ params }: PageProps) {
   const { org_slug, unit_slug } = await params
   const member = await getCurrentMemberBySlug(org_slug)
 
-  if (!member) {
-    redirect(`/org/${org_slug}/login`)
-  }
-
   // owner または admin のみアクセス可能
-  if (member.role !== 'owner' && member.role !== 'admin') {
+  if (member && member.role !== 'owner' && member.role !== 'admin') {
     redirect(`/org/${org_slug}/units/${unit_slug}`)
   }
 
@@ -31,27 +26,9 @@ export default async function EmployeesPage({ params }: PageProps) {
 
   if (error) {
     return (
-      <div className="min-h-screen bg-slate-50">
-        <nav className="bg-white border-b border-slate-200">
-          <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-            <div className="flex h-16 items-center justify-between">
-              <div className="flex items-center gap-4">
-                <Link
-                  href={`/org/${org_slug}/units/${unit_slug}`}
-                  className="text-xl font-semibold text-slate-800 hover:text-slate-600"
-                >
-                  拠点詳細
-                </Link>
-              </div>
-            </div>
-          </div>
-        </nav>
-        <div className="mx-auto max-w-7xl py-6 sm:px-6 lg:px-8">
-          <div className="px-4 py-6 sm:px-0">
-            <div className="rounded-lg bg-red-50 border border-red-200 p-4">
-              <p className="text-red-800">{error}</p>
-            </div>
-          </div>
+      <div className="px-4 py-6 sm:px-0">
+        <div className="rounded-lg bg-red-50 border border-red-200 p-4">
+          <p className="text-red-800">{error}</p>
         </div>
       </div>
     )
@@ -101,44 +78,16 @@ export default async function EmployeesPage({ params }: PageProps) {
   }
 
   return (
-    <div className="min-h-screen bg-slate-50">
-      <nav className="bg-white border-b border-slate-200">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <div className="flex h-16 items-center justify-between">
-            <div className="flex items-center gap-4">
-              <Link
-                href={`/org/${org_slug}/units`}
-                className="text-xl font-semibold text-slate-800 hover:text-slate-600"
-              >
-                拠点一覧
-              </Link>
-              <span className="text-slate-400">/</span>
-              <Link
-                href={`/org/${org_slug}/units/${unit_slug}`}
-                className="text-xl font-semibold text-slate-800 hover:text-slate-600"
-              >
-                拠点詳細
-              </Link>
-              <span className="text-slate-400">/</span>
-              <h1 className="text-xl font-semibold text-slate-800">従業員管理</h1>
-            </div>
-          </div>
-        </div>
-      </nav>
-
-      <main className="mx-auto max-w-7xl py-6 sm:px-6 lg:px-8">
-        <div className="px-4 py-6 sm:px-0">
-          <EmployeeList
-            initialEmployees={employees || []}
-            organizationSlug={org_slug}
-            unitSlug={unit_slug}
-            createEmployeeAction={handleCreateEmployee}
-            updateEmployeeAction={handleUpdateEmployee}
-            resetPinAction={handleResetPin}
-            toggleActiveAction={handleToggleActive}
-          />
-        </div>
-      </main>
+    <div className="px-4 py-6 sm:px-0">
+      <EmployeeList
+        initialEmployees={employees || []}
+        organizationSlug={org_slug}
+        unitSlug={unit_slug}
+        createEmployeeAction={handleCreateEmployee}
+        updateEmployeeAction={handleUpdateEmployee}
+        resetPinAction={handleResetPin}
+        toggleActiveAction={handleToggleActive}
+      />
     </div>
   )
 }

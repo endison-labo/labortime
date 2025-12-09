@@ -14,3 +14,5 @@ SELECT id, name, is_active, created_at
 FROM public.staffs 
 WHERE name = '山田太郎';
 
+
+

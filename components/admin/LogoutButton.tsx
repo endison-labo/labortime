@@ -1,14 +1,14 @@
-import { signOut } from '@/app/actions/auth'
+'use client'
+
+import { logoutAction } from '@/app/actions/logout'
 
 interface LogoutButtonProps {
   organizationSlug?: string
 }
 
 export default function LogoutButton({ organizationSlug }: LogoutButtonProps = {}) {
-  // フォームのactionとして使えるようにラッパー関数を作成
-  async function handleLogout() {
-    'use server'
-    await signOut(organizationSlug)
+  const handleLogout = async () => {
+    await logoutAction(organizationSlug)
   }
 
   return (
